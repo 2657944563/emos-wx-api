@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.emos.wx.db.mapper.TbMeetingMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.emos.wx.db.pojo.TbMeeting">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="uuid" column="uuid" jdbcType="VARCHAR"/>
+            <result property="title" column="title" jdbcType="VARCHAR"/>
+            <result property="creatorId" column="creator_id" jdbcType="BIGINT"/>
+            <result property="date" column="date" jdbcType="DATE"/>
+            <result property="place" column="place" jdbcType="VARCHAR"/>
+            <result property="start" column="start" jdbcType="TIME"/>
+            <result property="end" column="end" jdbcType="TIME"/>
+            <result property="type" column="type" jdbcType="SMALLINT"/>
+            <result property="members" column="members" jdbcType="OTHER"/>
+            <result property="desc" column="desc" jdbcType="VARCHAR"/>
+            <result property="instanceId" column="instance_id" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="SMALLINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,uuid,title,
+        creator_id,date,place,
+        start,end,type,
+        members,desc,instance_id,
+        status,create_time
+    </sql>
+</mapper>

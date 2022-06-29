@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.emos.wx.db.mapper.TbUserMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.emos.wx.db.pojo.TbUser">
+            <id property="id" column="id" jdbcType="OTHER"/>
+            <result property="openId" column="open_id" jdbcType="VARCHAR"/>
+            <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+            <result property="photo" column="photo" jdbcType="VARCHAR"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="sex" column="sex" jdbcType="OTHER"/>
+            <result property="tel" column="tel" jdbcType="CHAR"/>
+            <result property="email" column="email" jdbcType="VARCHAR"/>
+            <result property="hiredate" column="hiredate" jdbcType="DATE"/>
+            <result property="role" column="role" jdbcType="OTHER"/>
+            <result property="root" column="root" jdbcType="TINYINT"/>
+            <result property="deptId" column="dept_id" jdbcType="OTHER"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,open_id,nickname,
+        photo,name,sex,
+        tel,email,hiredate,
+        role,root,dept_id,
+        status,create_time
+    </sql>
+</mapper>
