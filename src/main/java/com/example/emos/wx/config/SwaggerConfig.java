@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.ApiKey;
 import springfox.documentation.service.AuthorizationScope;
 import springfox.documentation.service.SecurityReference;
@@ -31,8 +32,9 @@ public class SwaggerConfig {
         //配置swagger页面信息
         ApiInfoBuilder apiInfoBuilder = new ApiInfoBuilder();
         apiInfoBuilder.title("EMOS在线办公系统");
-        apiInfoBuilder.version("0.0.1");
-        docket.apiInfo(apiInfoBuilder.build());
+//        apiInfoBuilder.version("0.0.1");
+        ApiInfo apiInfo = apiInfoBuilder.build();
+        docket.apiInfo(apiInfo);
 
         //配置api扫描
         ApiSelectorBuilder apiSelectorBuilder = docket.select();
@@ -48,8 +50,9 @@ public class SwaggerConfig {
         list.add(apiKey);
         docket.securitySchemes(list);
         //配置令牌作用域
-        AuthorizationScope[] scope = {new AuthorizationScope("global", "accessEverything")};
-        SecurityReference reference = new SecurityReference("token", scope);
+        AuthorizationScope scope = new AuthorizationScope("global", "accessEverything");
+        AuthorizationScope[] scopes = {scope};
+        SecurityReference reference = new SecurityReference("token", scopes);
         List<SecurityReference> refList = new ArrayList<>();
         refList.add(reference);
         SecurityContext context = SecurityContext.builder().securityReferences(refList).build();
