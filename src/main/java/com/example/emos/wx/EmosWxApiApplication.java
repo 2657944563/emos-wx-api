@@ -1,19 +1,15 @@
 package com.example.emos.wx;
 
-import com.example.emos.wx.db.service.TbRoleService;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import javax.annotation.Resource;
+import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
-@MapperScan("com.example.emos.wx.db.mapper")
+//@MapperScan("com.example.emos.wx.db.mapper")
 public class EmosWxApiApplication {
 
-    public static void main(String[] args)
-    {
-        SpringApplication.run(EmosWxApiApplication.class, args);
+    public static void main(String[] args) {
+        ConfigurableApplicationContext run = SpringApplication.run(EmosWxApiApplication.class, args);
 
     }
 
