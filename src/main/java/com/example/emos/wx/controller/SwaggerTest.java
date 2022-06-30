@@ -24,4 +24,10 @@ public class SwaggerTest {
     public R swagger(@Valid @RequestBody SwaggerTestFrom from) {
         return R.ok().put("msg", "hello swagger").put("name", from.getName());
     }
+
+    @PostMapping("testXss")
+    @ApiOperation("Xss防护测试")
+    public R xss(String string) {
+        return R.ok().put("msg", string);
+    }
 }
