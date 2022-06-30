@@ -1,8 +1,8 @@
 package com.example.emos.wx;
 
 import com.example.emos.wx.db.mapper.TbRoleMapper;
-import com.mongodb.client.MongoClient;
 import com.example.emos.wx.db.service.TbRoleService;
+import com.mongodb.client.MongoClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
 
 @SpringBootTest
@@ -35,7 +34,8 @@ class EmosWxApiApplicationTests {
     RedisTemplate<String,String> redisTemplate;
     @Test
     void redisTest() {
-        redisTemplate.opsForValue().set("test", "test",100,TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set("test", "test", 100, TimeUnit.SECONDS);
+        System.out.println(redisTemplate.getConnectionFactory());
         System.out.println(redisTemplate);
     }
 

@@ -1,4 +1,4 @@
-package com.example.emos.wx.xss;
+package com.example.emos.wx.config.xss;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HtmlUtil;

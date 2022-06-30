@@ -1,4 +1,4 @@
-package com.example.emos.wx.xss;
+package com.example.emos.wx.config.xss;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
