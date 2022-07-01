@@ -16,7 +16,7 @@ import java.util.Date;
 
 @Component
 @Slf4j
-public class shiroJwtUtil {
+public class JwtUtil {
     @Value("${emos.jwt.secret}")
     private String secret;
     @Value("${emos.jwt.expire}")

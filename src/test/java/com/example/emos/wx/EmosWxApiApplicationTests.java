@@ -1,10 +1,12 @@
 package com.example.emos.wx;
 
+import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.db.mapper.TbRoleMapper;
 import com.example.emos.wx.db.service.TbRoleService;
 import com.mongodb.client.MongoClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -59,8 +61,20 @@ class EmosWxApiApplicationTests {
     TbRoleService tbRoleService;
     @Autowired
     TbRoleMapper tbRoleMapper;
+
     @Test
     void mybatisplusTest() {
         System.out.println(tbRoleMapper.selectAllByIdTbRole());
+    }
+
+    @Autowired
+    JwtUtil jwtUtil;
+    @Value("${emos.jwt.cache-expire}")
+    String cacheExpire;
+
+    @Test
+    void jwtTest() {
+        System.out.println(jwtUtil.createToken(123));
+        System.out.println(cacheExpire);
     }
 }
