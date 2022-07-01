@@ -30,10 +30,11 @@ public class TokenAspect {
     public Object asp(ProceedingJoinPoint joinPoint) throws Throwable {
         R r = (R) joinPoint.proceed();
         String token = threadLocalToken.getToken();
+        //用完就将Threadlocal的token删除，避免内存泄漏
+        threadLocalToken.clear();
         if (!StrUtil.isBlank(token)) {
             r.put("token", token);
         }
-        r.put("test", "测试asp效果");
         return r;
     }
 }

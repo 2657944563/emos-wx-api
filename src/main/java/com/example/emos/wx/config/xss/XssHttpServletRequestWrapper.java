@@ -3,6 +3,7 @@ package com.example.emos.wx.config.xss;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HtmlUtil;
 import cn.hutool.json.JSONUtil;
+import com.example.emos.wx.exception.EmosException;
 
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
@@ -77,7 +78,13 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
         bufferedReader.close();
         in.close();
         inputStream.close();
-        Map<String, Object> map = JSONUtil.parseObj(stringBuilder.toString());
+        Map<String, Object> map = null;
+        try {
+            map = JSONUtil.parseObj(stringBuilder.toString());
+        } catch (Exception e) {
+            throw new EmosException("参数转换异常");
+        }
+
         if (!map.isEmpty()) {
             for (String s : map.keySet()) {
                 Object str1 = map.get(s);
