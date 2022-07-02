@@ -32,6 +32,7 @@ public class OAuth2Filter extends AuthenticatingFilter {
     RedisTemplate redisTemplate;
     @Value("${emos.jwt.cache-expire}")
     int cacheExpire;
+
     @Resource
     ThreadLocalToken threadLocalToken;
 
