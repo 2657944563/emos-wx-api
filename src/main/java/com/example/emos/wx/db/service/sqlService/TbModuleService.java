@@ -1,7 +1,7 @@
-package com.example.emos.wx.db.service;
+package com.example.emos.wx.db.service.sqlService;
 
-import com.example.emos.wx.db.pojo.TbModule;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.example.emos.wx.db.pojo.TbModule;
 
 /**
 * @author 2657944563

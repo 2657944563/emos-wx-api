@@ -1,8 +1,11 @@
 package com.example.emos.wx;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.emos.wx.config.JwtUtil;
-import com.example.emos.wx.db.mapper.TbRoleMapper;
-import com.example.emos.wx.db.service.TbRoleService;
+import com.example.emos.wx.db.mapper.TbUserMapper;
+import com.example.emos.wx.db.pojo.TbRole;
+import com.example.emos.wx.db.service.sqlService.TbRoleService;
+import com.example.emos.wx.db.service.sqlService.TbUserService;
 import com.mongodb.client.MongoClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,7 @@ class EmosWxApiApplicationTests {
      */
     @Autowired
     JdbcTemplate jdbcTemplate;
+
     @Test
     void jdbcTest() {
         System.out.println(jdbcTemplate.queryForList("select * from emos.tb_action"));
@@ -33,7 +37,8 @@ class EmosWxApiApplicationTests {
      * 测试redis数据库连接状态
      */
     @Autowired
-    RedisTemplate<String,String> redisTemplate;
+    RedisTemplate<String, String> redisTemplate;
+
     @Test
     void redisTest() {
         redisTemplate.opsForValue().set("test", "test", 100, TimeUnit.SECONDS);
@@ -58,13 +63,14 @@ class EmosWxApiApplicationTests {
      * 测试mybatisplus是否可用
      */
     @Autowired
-    TbRoleService tbRoleService;
+    TbUserService tbUserService;
     @Autowired
-    TbRoleMapper tbRoleMapper;
-
+    TbRoleService tbRoleService;
     @Test
     void mybatisplusTest() {
-        System.out.println(tbRoleMapper.selectAllByIdTbRole());
+        TbUserMapper baseMapper = (TbUserMapper) tbUserService.getBaseMapper();
+        System.out.println(baseMapper.haveRootUser());
+        System.out.println(tbRoleService.getOne(new QueryWrapper<TbRole>().eq("id", 0)));
     }
 
     @Autowired
@@ -77,4 +83,5 @@ class EmosWxApiApplicationTests {
         System.out.println(jwtUtil.createToken(123));
         System.out.println(cacheExpire);
     }
+
 }

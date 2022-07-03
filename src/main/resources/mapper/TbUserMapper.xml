@@ -18,7 +18,7 @@
             <result property="root" column="root" jdbcType="TINYINT"/>
             <result property="deptId" column="dept_id" jdbcType="OTHER"/>
             <result property="status" column="status" jdbcType="TINYINT"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -28,4 +28,9 @@
         role,root,dept_id,
         status,create_time
     </sql>
+    <select id="haveRootUser" resultType="java.lang.Boolean">
+        select if(count(*), true, false)
+        from tb_user
+        where tb_user.root >= 1;
+    </select>
 </mapper>
