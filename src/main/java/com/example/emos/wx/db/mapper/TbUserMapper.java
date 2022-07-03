@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.example.emos.wx.db.pojo.TbUser;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.Set;
+
 /**
  * @author 2657944563
  * @description 针对表【tb_user(用户表)】的数据库操作Mapper
@@ -13,7 +15,9 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface TbUserMapper extends BaseMapper<TbUser> {
 
-    public boolean haveRootUser();
+    boolean haveRootUser();
+
+    Set<String> searchUserPermissions(Integer userid);
 
 }
 

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.db.mapper.TbUserMapper;
 import com.example.emos.wx.db.pojo.TbRole;
+import com.example.emos.wx.db.service.contollerService.UserService;
 import com.example.emos.wx.db.service.sqlService.TbRoleService;
 import com.example.emos.wx.db.service.sqlService.TbUserService;
 import com.mongodb.client.MongoClient;
@@ -66,6 +67,7 @@ class EmosWxApiApplicationTests {
     TbUserService tbUserService;
     @Autowired
     TbRoleService tbRoleService;
+
     @Test
     void mybatisplusTest() {
         TbUserMapper baseMapper = (TbUserMapper) tbUserService.getBaseMapper();
@@ -82,6 +84,14 @@ class EmosWxApiApplicationTests {
     void jwtTest() {
         System.out.println(jwtUtil.createToken(123));
         System.out.println(cacheExpire);
+    }
+
+    @Autowired
+    UserService service;
+
+    @Test
+    void testuser() {
+        System.out.println(service.searchUserPermissions(3));
     }
 
 }

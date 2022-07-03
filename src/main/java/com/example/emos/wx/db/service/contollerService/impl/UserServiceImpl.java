@@ -4,7 +4,6 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.emos.wx.db.mapper.TbUserMapper;
 import com.example.emos.wx.db.pojo.TbUser;
 import com.example.emos.wx.db.service.contollerService.UserService;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * @author 2657944563
@@ -55,7 +55,7 @@ public class UserServiceImpl implements UserService {
     /**
      * 注册账号：获取用户唯一id，判断是否在数据库，向数据库注册账号或者验证账号
      *
-     * @param wxRegisterCode 微信邀请码
+     * @param wxRegisterCode 微信注册码
      * @param code           用户临时code
      * @param name           用户名
      * @param imgUrl         用户头衔地址
@@ -65,7 +65,8 @@ public class UserServiceImpl implements UserService {
     public Integer registerUser(String wxRegisterCode, String code, String name, String imgUrl) {
 
         String openId = getOpenId(code);
-        if (this.registerCode.equals(wxRegisterCode)) {
+        System.out.println("openId:" + openId);
+        if (registerCode.equals(wxRegisterCode)) {
             TbUserMapper baseMapper = (TbUserMapper) tbUserService.getBaseMapper();
             if (baseMapper.haveRootUser()) {
                 throw new EmosException("管理员冲突,无法绑定超级管理员账号");
@@ -78,13 +79,24 @@ public class UserServiceImpl implements UserService {
                 admin.setStatus(1);
                 admin.setCreateTime(new Date());
                 admin.setRoot(1);
-                boolean save = tbUserService.save(admin);
+                tbUserService.save(admin);
                 //查看是否返回id
-                System.out.println(admin.getId());
-                return (Integer) tbUserService.getOne(new QueryWrapper<TbUser>().eq("openId", openId)).getId();
+                return admin.getId();
             }
+        } else {
+            //TODO 普通员工注册
+            System.out.println("普通员工注册");
+            System.out.println("--------------");
+            System.out.println(registerCode);
+            System.out.println(wxRegisterCode);
+            System.out.println("--------------");
         }
-
         return 1;
+    }
+
+    @Override
+    public Set<String> searchUserPermissions(Integer userId) {
+        TbUserMapper baseMapper = (TbUserMapper) tbUserService.getBaseMapper();
+        return baseMapper.searchUserPermissions(3);
     }
 }

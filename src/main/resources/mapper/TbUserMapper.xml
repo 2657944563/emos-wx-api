@@ -5,19 +5,19 @@
 <mapper namespace="com.example.emos.wx.db.mapper.TbUserMapper">
 
     <resultMap id="BaseResultMap" type="com.example.emos.wx.db.pojo.TbUser">
-            <id property="id" column="id" jdbcType="OTHER"/>
-            <result property="openId" column="open_id" jdbcType="VARCHAR"/>
-            <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
-            <result property="photo" column="photo" jdbcType="VARCHAR"/>
-            <result property="name" column="name" jdbcType="VARCHAR"/>
-            <result property="sex" column="sex" jdbcType="OTHER"/>
-            <result property="tel" column="tel" jdbcType="CHAR"/>
-            <result property="email" column="email" jdbcType="VARCHAR"/>
-            <result property="hiredate" column="hiredate" jdbcType="DATE"/>
-            <result property="role" column="role" jdbcType="OTHER"/>
-            <result property="root" column="root" jdbcType="TINYINT"/>
-            <result property="deptId" column="dept_id" jdbcType="OTHER"/>
-            <result property="status" column="status" jdbcType="TINYINT"/>
+        <id property="id" column="id" jdbcType="INTEGER"/>
+        <result property="openId" column="open_id" jdbcType="VARCHAR"/>
+        <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+        <result property="photo" column="photo" jdbcType="VARCHAR"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="sex" column="sex" jdbcType="OTHER"/>
+        <result property="tel" column="tel" jdbcType="CHAR"/>
+        <result property="email" column="email" jdbcType="VARCHAR"/>
+        <result property="hiredate" column="hiredate" jdbcType="DATE"/>
+        <result property="role" column="role" jdbcType="OTHER"/>
+        <result property="root" column="root" jdbcType="TINYINT"/>
+        <result property="deptId" column="dept_id" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
         <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
@@ -29,8 +29,17 @@
         status,create_time
     </sql>
     <select id="haveRootUser" resultType="java.lang.Boolean">
-        select if(count(*), true, false)
+        select if(count(id), true, false)
         from tb_user
         where tb_user.root >= 1;
+    </select>
+    <select id="searchUserPermissions" parameterType="int" resultType="java.lang.String">
+        SELECT p.permission_name
+        FROM tb_role r
+                 JOIN tb_user u ON JSON_CONTAINS(u.role, CAST(r.id as char))
+                 JOIN tb_permission p ON
+            JSON_CONTAINS(r.permissions, CAST(p.id AS char))
+        WHERE u.id = #{userid}
+          and u.status = 1;
     </select>
 </mapper>

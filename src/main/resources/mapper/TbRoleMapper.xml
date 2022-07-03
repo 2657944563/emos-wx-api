@@ -5,9 +5,9 @@
 <mapper namespace="com.example.emos.wx.db.mapper.TbRoleMapper">
 
     <resultMap id="BaseResultMap" type="com.example.emos.wx.db.pojo.TbRole">
-            <id property="id" column="id" jdbcType="OTHER"/>
+            <id property="id" column="id" jdbcType="INTEGER"/>
             <result property="roleName" column="role_name" jdbcType="VARCHAR"/>
-            <result property="permissions" column="permissions" jdbcType="OTHER"/>
+        <result property="permissions" column="permissions" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
