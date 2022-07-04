@@ -2,6 +2,7 @@ package com.example.emos.wx.controller;
 
 import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
+import com.example.emos.wx.controller.from.LoginForm;
 import com.example.emos.wx.controller.from.RegisterFrom;
 import com.example.emos.wx.db.service.contollerService.UserService;
 import io.swagger.annotations.Api;
@@ -41,7 +42,19 @@ public class RegisterController {
         Set<String> strings = userService.searchUserPermissions(userId);
         String token = jwtUtil.createToken(userId);
         saveTokenT2Redis(token, userId);
-        return R.ok("用户注册成功").put("token", token).put("permissions", strings);
+        System.out.println("Register:" + register);
+        return R.ok("用户注册成功").put("token", token).put("permission", strings);
+    }
+
+    @PostMapping("/login")
+    @ApiOperation("登录用户")
+    public R login(@Valid @RequestBody LoginForm loginForm) {
+        Integer userId = userService.login(loginForm.getCode());
+        String token = jwtUtil.createToken(userId);
+        saveTokenT2Redis(token, userId);
+        Set<String> strings = userService.searchUserPermissions(userId);
+        return R.ok("登录成功").put("permission", strings).put("token", token);
+
 
     }
 

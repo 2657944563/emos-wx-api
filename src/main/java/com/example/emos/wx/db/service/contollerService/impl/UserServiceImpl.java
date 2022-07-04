@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.emos.wx.db.mapper.TbUserMapper;
 import com.example.emos.wx.db.pojo.TbUser;
 import com.example.emos.wx.db.service.contollerService.UserService;
@@ -89,14 +90,27 @@ public class UserServiceImpl implements UserService {
             System.out.println("--------------");
             System.out.println(registerCode);
             System.out.println(wxRegisterCode);
+            System.out.println(code);
+            System.out.println(name);
+            System.out.println(imgUrl);
             System.out.println("--------------");
         }
-        return 1;
+        return 7;
     }
 
     @Override
     public Set<String> searchUserPermissions(Integer userId) {
         TbUserMapper baseMapper = (TbUserMapper) tbUserService.getBaseMapper();
-        return baseMapper.searchUserPermissions(3);
+        return baseMapper.searchUserPermissions(userId);
+    }
+
+    @Override
+    public Integer login(String code) {
+        TbUser open_id = tbUserService.getOne(new QueryWrapper<TbUser>().eq("open_id", getOpenId(code)));
+        if (open_id == null) {
+            throw new EmosException("账户不存在");
+        }
+//        TODO 用户登录消息处理
+        return open_id.getId();
     }
 }
