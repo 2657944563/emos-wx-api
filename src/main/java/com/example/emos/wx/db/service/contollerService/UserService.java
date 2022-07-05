@@ -1,5 +1,9 @@
 package com.example.emos.wx.db.service.contollerService;
 
+import com.example.emos.wx.db.pojo.SysConfig;
+import com.example.emos.wx.db.pojo.TbUser;
+
+import java.util.List;
 import java.util.Set;
 
 public interface UserService {
@@ -7,5 +11,9 @@ public interface UserService {
 
     Set<String> searchUserPermissions(Integer userid);
 
-    public Integer login(String code);
+    Integer login(String code);
+
+    List<SysConfig> allCheckTime();
+
+    TbUser selectByUserId(Integer userId);
 }

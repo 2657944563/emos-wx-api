@@ -34,6 +34,7 @@ public class ExpectionAdvice {
             return R.error("不具备操作权限").toString();
         }
 //        return "网站异常，请联系管理员";
+        System.out.println(e.getMessage());
         return R.error("网站异常,请联系管理员").toString();
     }
 

@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/user")
 @RestController
 @Api("微信登录")
-public class RegisterController {
+public class UserController {
     @Autowired
     UserService userService;
     @Autowired
@@ -49,7 +49,9 @@ public class RegisterController {
     @PostMapping("/login")
     @ApiOperation("登录用户")
     public R login(@Valid @RequestBody LoginForm loginForm) {
+        System.out.println("临时授权码" + loginForm.getCode() + "尝试登陆");
         Integer userId = userService.login(loginForm.getCode());
+        System.out.println(userId + " 登录了");
         String token = jwtUtil.createToken(userId);
         saveTokenT2Redis(token, userId);
         Set<String> strings = userService.searchUserPermissions(userId);

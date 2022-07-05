@@ -6,8 +6,10 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.emos.wx.db.mapper.TbUserMapper;
+import com.example.emos.wx.db.pojo.SysConfig;
 import com.example.emos.wx.db.pojo.TbUser;
 import com.example.emos.wx.db.service.contollerService.UserService;
+import com.example.emos.wx.db.service.sqlService.SysConfigService;
 import com.example.emos.wx.db.service.sqlService.TbUserService;
 import com.example.emos.wx.exception.EmosException;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -35,6 +38,8 @@ public class UserServiceImpl implements UserService {
     private String registerCode;
     @Resource
     TbUserService tbUserService;
+    @Resource
+    SysConfigService sysConfigService;
 
     private String getOpenId(String code) {
         String url = "https://api.weixin.qq.com/sns/jscode2session";
@@ -112,5 +117,20 @@ public class UserServiceImpl implements UserService {
         }
 //        TODO 用户登录消息处理
         return open_id.getId();
+    }
+
+    /**
+     * 获得考勤打卡时间段落，上班下班时间
+     *
+     * @return
+     */
+    @Override
+    public List<SysConfig> allCheckTime() {
+        return sysConfigService.list(new QueryWrapper<SysConfig>().eq("status", 1));
+    }
+
+    @Override
+    public TbUser selectByUserId(Integer userId) {
+        return tbUserService.getById(userId);
     }
 }
