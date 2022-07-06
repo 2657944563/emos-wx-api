@@ -7,6 +7,7 @@ import com.example.emos.wx.db.service.contollerService.CheckinService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +31,7 @@ public class CheckinController {
 
     @GetMapping("/validCanCheckIn")
     @ApiOperation("查看是否可签到")
+    @RequiresPermissions("user:update")
     public R checkin(@RequestHeader("token") String token) {
         String s = checkinService.validCanCheckIn(jwtUtil.getUserId(token), DateUtil.now());
         return R.ok(s);

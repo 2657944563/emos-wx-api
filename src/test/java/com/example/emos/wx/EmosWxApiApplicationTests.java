@@ -142,7 +142,6 @@ class EmosWxApiApplicationTests {
         System.out.println(s3.intern() == s3.intern());
         final Runtime runtime = Runtime.getRuntime();
         System.out.println(System.getProperty("java.home"));
-        System.out.println(new JwtUtil().createToken(1));
         System.out.println("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTc0NjYwMzYsInVzZXJJZCI6MX0.K-R40QBq0dz24IBz8lN5NpYvnJk0J3rBwpGVpxktALo\n");
     }
 

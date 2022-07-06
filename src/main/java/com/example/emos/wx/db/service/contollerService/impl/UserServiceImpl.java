@@ -15,6 +15,7 @@ import com.example.emos.wx.exception.EmosException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -22,6 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author 2657944563
@@ -40,6 +42,9 @@ public class UserServiceImpl implements UserService {
     TbUserService tbUserService;
     @Resource
     SysConfigService sysConfigService;
+
+    @Resource
+    RedisTemplate redisTemplate;
 
     private String getOpenId(String code) {
         String url = "https://api.weixin.qq.com/sns/jscode2session";
@@ -103,10 +108,24 @@ public class UserServiceImpl implements UserService {
         return 7;
     }
 
+    /**
+     * 查询用户权限，先看redis有没有用户权限列表，没有再去数据库获取并且存储
+     *
+     * @param userId
+     * @return
+     */
     @Override
     public Set<String> searchUserPermissions(Integer userId) {
+        Set<String> per = (Set<String>) getRedisValue(userId + ":permission");
+        if (per != null) {
+//            log.error("redis中有用户权限数据");
+            return per;
+        }
+//        log.error("redis中没有用户权限数据");
         TbUserMapper baseMapper = (TbUserMapper) tbUserService.getBaseMapper();
-        return baseMapper.searchUserPermissions(userId);
+        Set<String> permissions = baseMapper.searchUserPermissions(userId);
+        setRedisValue(userId + ":permission", permissions, 5, TimeUnit.DAYS);
+        return permissions;
     }
 
     @Override
@@ -132,5 +151,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public TbUser selectByUserId(Integer userId) {
         return tbUserService.getById(userId);
+    }
+
+    private Object getRedisValue(String key) {
+        if (redisTemplate.hasKey(key)) {
+            return redisTemplate.opsForValue().get(key);
+        }
+        return null;
+    }
+
+    private void setRedisValue(String key, Object value, Integer expire, TimeUnit timeType) {
+        redisTemplate.opsForValue().set(key, value, expire, timeType);
     }
 }

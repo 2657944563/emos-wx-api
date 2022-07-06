@@ -4,6 +4,7 @@ import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.db.pojo.TbUser;
 import com.example.emos.wx.db.service.contollerService.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Set;
 
 
 /**
@@ -21,6 +23,7 @@ import javax.annotation.Resource;
  * @author 2657944563
  */
 @Component
+@Slf4j
 public class OAuth2Realm extends AuthorizingRealm {
     @Autowired
     JwtUtil jwtUtil;
@@ -55,6 +58,7 @@ public class OAuth2Realm extends AuthorizingRealm {
             throw new LockedAccountException(R.error("用户数据异常").toString());
 //            throw  new EmosException(R.error("用户数据异常").toString()); // 这里不能用自定义异常以及其他异常，shiro会拦截并且处理，返回默认异常信息
         }
+//        log.warn("认证方法");
         return new SimpleAuthenticationInfo(tbUser, authenticationToken.getPrincipal(), tbUser.getName());
     }
 
@@ -62,14 +66,17 @@ public class OAuth2Realm extends AuthorizingRealm {
     /**
      * 授权（验证权限 的方法）
      *
-     * @param principalCollection
-     * @return
+     * @param principalCollection 用于获取认证封装的对象信息
+     * @return 返回用户授权对象
      */
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
         SimpleAuthorizationInfo simple = new SimpleAuthorizationInfo();
-        simple.addRole("any");
-        //TODO 查询权限并且添加进simple
+        TbUser user = (TbUser) principalCollection.getPrimaryPrincipal();
+        Set<String> primary = userService.searchUserPermissions(user.getId());
+//        log.warn(primary.toString() + "认证方法");
+        // 询权限并且添加进simple
+        simple.setStringPermissions(primary);
         return simple;
     }
 }
