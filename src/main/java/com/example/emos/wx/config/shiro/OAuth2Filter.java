@@ -1,9 +1,11 @@
 package com.example.emos.wx.config.shiro;
 
 import cn.hutool.core.util.StrUtil;
-import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -24,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @Scope("prototype")
+@Slf4j
 public class OAuth2Filter extends AuthenticatingFilter {
 
     @Resource
@@ -72,10 +75,10 @@ public class OAuth2Filter extends AuthenticatingFilter {
     /**
      * 不被放行的请求需要被这个方法过滤，然后尝试获取请求的token，根据token来判断接下来的流程
      *
-     * @param request
-     * @param response
-     * @return
-     * @throws Exception
+     * @param request  请求体
+     * @param response 返回体
+     * @return 返回是否允许通过
+     * @throws Exception 捕获参数验证的异常
      */
     @Override
     protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
@@ -93,7 +96,7 @@ public class OAuth2Filter extends AuthenticatingFilter {
         //如果没有获取到令牌，那么没有登录，需要登录
         if (StrUtil.isBlank(token)) {
             resp.setStatus(HttpStatus.SC_UNAUTHORIZED);
-            resp.getWriter().println("未登录状态，无令牌");
+            resp.getWriter().println(R.error("未登录状态，无令牌"));
             return false;
         }
         try {
@@ -112,13 +115,18 @@ public class OAuth2Filter extends AuthenticatingFilter {
                 threadLocalToken.setToken(token);
             } else {
                 //重新登陆：redis的令牌也过期了，那么就需要重新登录
-                resp.getWriter().println("令牌过期，重新登录");
+                resp.getWriter().println(R.error("令牌过期，重新登录"));
                 resp.setStatus(HttpStatus.SC_UNAUTHORIZED);
                 return false;
             }
-        } catch (JWTDecodeException e) {
+        } catch (JWTVerificationException e) {
             resp.setStatus(HttpStatus.SC_UNAUTHORIZED);
-            resp.getWriter().println("无效令牌");
+            resp.getWriter().println(R.error("无效令牌"));
+            return false;
+        } catch (Exception ignored) {
+            log.error(ignored.getMessage());
+            resp.setStatus(HttpStatus.SC_UNAUTHORIZED);
+            resp.getWriter().println(R.error("令牌异常"));
             return false;
         }
         //认证授权：简介调用自定义的realm认证授权，如果认证授权通过返回true，否者flase

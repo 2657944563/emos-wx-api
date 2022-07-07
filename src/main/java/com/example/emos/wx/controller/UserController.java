@@ -1,5 +1,6 @@
 package com.example.emos.wx.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.controller.from.LoginForm;
@@ -12,10 +13,7 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Set;
@@ -62,12 +60,16 @@ public class UserController {
      */
     @PostMapping("/login")
     @ApiOperation("登录用户")
-    public R login(@Valid @RequestBody LoginForm loginForm) {
+    public R login(@Valid @RequestBody LoginForm loginForm, @RequestHeader("token") String requestToken) {
+        if (!StrUtil.isBlank(requestToken)) {
+            R.ok("登录成功").put("loginStatus", "keep/alive");
+        }
         System.out.println("临时授权码" + loginForm.getCode() + "尝试登陆");
         Integer userId = userService.login(loginForm.getCode());
         System.out.println(userId + " 登录了");
         String token = jwtUtil.createToken(userId);
         saveTokenT2Redis(token, userId);
+        System.out.println(token);
         Set<String> strings = userService.searchUserPermissions(userId);
         return R.ok("登录成功").put("permission", strings).put("token", token);
 

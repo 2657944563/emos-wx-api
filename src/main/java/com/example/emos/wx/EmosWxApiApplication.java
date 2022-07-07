@@ -5,6 +5,7 @@ import com.example.emos.wx.config.SystemConstants;
 import com.example.emos.wx.db.pojo.SysConfig;
 import com.example.emos.wx.db.service.contollerService.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
@@ -12,6 +13,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.io.File;
 import java.lang.reflect.Field;
 
 @SpringBootApplication
@@ -20,6 +22,8 @@ import java.lang.reflect.Field;
 //@MapperScan("com.example.emos.wx.db.mapper")
 public class EmosWxApiApplication {
 
+    @Value("${emos.face.image-folder}")
+    private String imageFolder;
     @Resource
     UserService userService;
     @Resource
@@ -33,6 +37,8 @@ public class EmosWxApiApplication {
 
     @PostConstruct
     public void init() {
+//        创建临时人脸图片文件夹
+        new File(imageFolder).mkdirs();
         for (SysConfig sysConfig : userService.allCheckTime()) {
             String paramKey = sysConfig.getParamKey();
             String paramValue = sysConfig.getParamValue();
