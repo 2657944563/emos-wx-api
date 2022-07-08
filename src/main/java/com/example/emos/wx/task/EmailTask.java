@@ -25,7 +25,7 @@ public class EmailTask {
      */
     @Async
     public void sendAsync(SimpleMailMessage message) {
-//        设置接收人
+//        设置发收人
         message.setFrom(system);
 //        发送邮件
         javaMailSender.send(message);

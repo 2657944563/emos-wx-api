@@ -4,9 +4,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 签到表
@@ -59,7 +60,7 @@ public class TbCheckin implements Serializable {
     /**
      * 风险等级
      */
-    private Object risk;
+    private Integer risk;
 
     /**
      * 签到日期

@@ -50,7 +50,7 @@ public class CheckinController {
         if (file == null) {
             throw new EmosException("未上传人脸照片");
         }
-        if (file.getContentType().endsWith("jpg")) {
+        if (!file.getOriginalFilename().endsWith("jpg")) {
             throw new EmosException("请上传jpg文件");
         }
         String path = imageFolder + "/" + file.getOriginalFilename().toLowerCase();
@@ -83,7 +83,7 @@ public class CheckinController {
         }
         String fileName = file.getOriginalFilename().toLowerCase();
         String filePath = imageFolder + "/" + fileName;
-        if (fileName.endsWith("jpg") || fileName.endsWith("jpeg")) {
+        if (!fileName.endsWith("jpg")) {
             return R.error("需要提交jpg格式图片");
         } else {
             try {
@@ -113,7 +113,7 @@ public class CheckinController {
     @GetMapping("/validCanCheckIn")
     @ApiOperation("查看是否可签到")
     public R validCanCheckIn(@RequestHeader("token") String token) {
-
+        System.out.println("validaCanCheckIn方法调用 token : " + token);
         String s = checkinService.validCanCheckIn(jwtUtil.getUserId(token), DateUtil.now());
         return R.ok(s);
     }

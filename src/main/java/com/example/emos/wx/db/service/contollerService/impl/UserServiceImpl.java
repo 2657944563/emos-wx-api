@@ -36,8 +36,8 @@ public class UserServiceImpl implements UserService {
     private String secret;
     @Value("${emos.wx.appId}")
     private String appId;
-    @Value("${emos.wx.registerCode}")
-    private String registerCode;
+    @Value("${emos.wx.rootRegisterCode}")
+    private String rootRegisterCode;
     @Resource
     TbUserService tbUserService;
     @Resource
@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
 
         String openId = getOpenId(code);
         System.out.println("openId:" + openId);
-        if (registerCode.equals(wxRegisterCode)) {
+        if (rootRegisterCode.equals(wxRegisterCode)) {
             TbUserMapper baseMapper = (TbUserMapper) tbUserService.getBaseMapper();
             if (baseMapper.haveRootUser()) {
                 throw new EmosException("管理员冲突,无法绑定超级管理员账号");
@@ -98,7 +98,7 @@ public class UserServiceImpl implements UserService {
             //TODO 普通员工注册
             System.out.println("普通员工注册");
             System.out.println("--------------");
-            System.out.println(registerCode);
+            System.out.println(rootRegisterCode);
             System.out.println(wxRegisterCode);
             System.out.println(code);
             System.out.println(name);

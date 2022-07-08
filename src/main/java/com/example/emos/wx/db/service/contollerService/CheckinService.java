@@ -9,5 +9,5 @@ public interface CheckinService {
 
     public void createFaceModel(int userId, String path);
 
-    public void deleteFaceModel(int userId, String userFaceModel);
+    public void deleteFaceModel(int userId);
 }

@@ -1,5 +1,6 @@
 package com.example.emos.wx.common.util;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.http.HttpStatus;
 
 import java.util.HashMap;
@@ -19,6 +20,29 @@ public class R extends HashMap<String, Object> {
 
     public static R ok() {
         return new R();
+    }
+
+    @Override
+    public String toString() {
+        return JSONObject.toJSONString(this);
+//        Iterator<Entry<String, Object>> i = entrySet().iterator();
+//        if (!i.hasNext()) {
+//            return "{}";
+//        }
+//        StringBuilder sb = new StringBuilder();
+//        sb.append('{');
+//        for (; ; ) {
+//            Entry<String, Object> e = i.next();
+//            String key = e.getKey();
+//            Object value = e.getValue();
+//            sb.append(key.equals(this) ? "(this Map)" : "\"" + key + "\"");
+//            sb.append(':');
+//            sb.append(value.equals(this) ? "(this Map)" : "\"" + value + "\"");
+//            if (!i.hasNext()) {
+//                return sb.append('}').toString();
+//            }
+//            sb.append(',').append(' ');
+//        }
     }
 
     public static R ok(String msg) {

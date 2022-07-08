@@ -15,10 +15,12 @@ import com.example.emos.wx.db.pojo.*;
 import com.example.emos.wx.db.service.contollerService.CheckinService;
 import com.example.emos.wx.db.service.sqlService.*;
 import com.example.emos.wx.exception.EmosException;
+import com.example.emos.wx.task.EmailTask;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -71,6 +73,11 @@ public class CheckinServiceImpl implements CheckinService {
     @Value("${emos.face.outher_id}")
     private String outherId;
 
+    @Value("${emos.email.hr}")
+    private String hrEmail;
+    @Resource
+    private EmailTask emailTask;
+
     /**
      * 查询是否能够考勤
      *
@@ -95,23 +102,23 @@ public class CheckinServiceImpl implements CheckinService {
             type = "工作日";
         }
         if ("节假日".equals(type)) {
-            return "今天是节假日,不需要考勤";
+            return "节假日不需考勤";
         } else {
             LocalDateTime now = LocalDateTime.now();
             String start = LocalDate.now() + "T" + systemConstants.getAttendanceStartTime();
             String end = LocalDate.now() + "T" + systemConstants.getAttendanceEndTime();
 //            System.out.println(now);
             if (now.isBefore(LocalDateTime.parse(start))) {
-                return "没有到上班考勤时间";
+                return "未到考勤时间";
             } else if (now.isAfter(LocalDateTime.parse(end))) {
-                return "已经过了上班考勤时间";
+                return "超过考勤时间";
             } else {
                 TbCheckin one = tbCheckinService.getOne(new QueryWrapper<TbCheckin>()
                         .eq("id", userId)
                         .eq("date", LocalDate.now())
                         .ge("create_time", LocalDateTime.parse(start))
                         .le("create_time", LocalDateTime.parse(end)));
-                return one == null ? "可以考勤" : "今日已经考勤,不用重复考勤";
+                return one == null ? "可以考勤" : "今日已考勤";
             }
         }
 
@@ -156,19 +163,28 @@ public class CheckinServiceImpl implements CheckinService {
 //            BigDecimal bigDecimal = (BigDecimal) jsonObject.get("confidence");
 //            Float confidence = Float.parseFloat(bigDecimal.toString());
             Float confidence = jsonObject.getFloat("confidence");
+//            System.out.println("人脸匹配度：" + confidence);
+//            System.out.println(jsonObject);
 
             //接口传入的错误数据
-            if (response.getStatus() != 200 && jsonObject.get("error_message") == null) {
-                log.warn(this.getClass().getName() + "人脸数据接口异常");
+            if (response.getStatus() != 200 && jsonObject.get("error_message") != null) {
+                log.warn(this.getClass().getName() + "人脸数据接口异常" + jsonObject.get("error_message"));
                 throw new EmosException("人脸数据接口异常");
             }
+//            System.out.println("status:" + response.getStatus());
             if (response.getStatus() != 200) {
                 log.warn(this.getClass().getName() + "人脸图片异常");
+                log.warn((String) jsonObject.get("error_message"));
                 throw new EmosException("人脸图片异常");
+            } else if (jsonObject.getJSONArray("faces1").size() > 1) {
+                throw new EmosException("检测到多个人脸");
+            } else if (confidence == null || jsonObject.getJSONArray("faces1").size() == 0) {
+                throw new EmosException("未检测到人脸");
             } else if (confidence < faceLevel) {
 //                如果人脸匹配数据相似度不足
                 throw new EmosException("人脸匹配不达标");
             } else {
+//                System.out.println("人脸匹配度：" + confidence);
                 // resk 疫情等级 1：低风险 2：中风险 3：高风险
                 int resk = 1;
                 if (StrUtil.isBlank((String) params.get("city")) || StrUtil.isBlank((String) params.get("district"))) {
@@ -189,12 +205,21 @@ public class CheckinServiceImpl implements CheckinService {
                     throw new EmosException("疫情信息获取失败");
                 }
                 System.out.println("疫情等级：" + yqLevel);
+//                yqLevel = "高风险";
                 if ("高风险".equals(yqLevel)) {
                     resk = 3;
                     // TODO 发邮箱给管理员警告
+                    SimpleMailMessage emailMessage = new SimpleMailMessage();
+                    emailMessage.setTo(hrEmail);
+                    emailMessage.setSubject("员工风险警报");
+                    emailMessage.setText("高风险：" + userId);
+                    emailTask.sendAsync(emailMessage);
+
                 } else if ("中风险".equals(yqLevel)) {
                     resk = 2;
                     // TODO 发邮箱给管理员警告
+                } else if ("低风险".equals(yqLevel)) {
+                    resk = 1;
                 } else {
                     throw new EmosException("疫情风险等级错误");
                 }
@@ -206,10 +231,12 @@ public class CheckinServiceImpl implements CheckinService {
                 tbCheckin.setCountry((String) params.get("country"));
                 tbCheckin.setDistrict((String) params.get("district"));
                 tbCheckin.setUserId(userId);
-                tbCheckin.setStatus(resk);
+                tbCheckin.setRisk(resk);
                 tbCheckin.setStatus(status);
                 tbCheckin.setDate(new Date());
                 tbCheckin.setCreateTime(new DateTime(date));
+                //重复签到前置处理，删除今天的签到
+                tbCheckinService.remove(new QueryWrapper<TbCheckin>().eq("user_id", userId).eq("date", LocalDate.now()));
                 if (!tbCheckinService.save(tbCheckin)) {
                     throw new EmosException("签到失败");
                 }
@@ -241,26 +268,33 @@ public class CheckinServiceImpl implements CheckinService {
             log.error("格式转换错误");
             throw new EmosException("格式转换错误");
         } else if (jsonObject.getInteger("face_num") != 1) {
-            throw new EmosException("检测到一个或多个人脸");
+            if (jsonObject.getInteger("face_num") == 0) {
+                throw new EmosException("未检测到人脸");
+            }
+            throw new EmosException("检测到多个人脸");
         } else {
             JSONArray faces = jsonObject.getJSONArray("faces");
 //            人脸模型数据
             String faceToken = faces.getJSONObject(0).getString("face_token");
             System.out.println("人脸token：" + faceToken);
+//            删除人脸模型服务器旧数据
+            deleteFaceModel(userId);
 //            人脸模型数据服务端持久化
             HttpRequest saveFaceRequest = getFaceRequest(saveFaceModelUrl);
             saveFaceRequest.form("outer_id", outherId);
             saveFaceRequest.form("face_tokens", faceToken);
             HttpResponse saveFaceResponse = saveFaceRequest.execute();
             if (saveFaceResponse.getStatus() != 200) {
-                throw new EmosException("人脸数据端持久化错误");
+                log.error("人脸数据端持久化错误");
+                throw new EmosException("人脸持久化错误");
             }
 //            持久化
             TbFaceModel faceModel = new TbFaceModel();
             faceModel.setFaceModel(faceToken);
             faceModel.setUserId(userId);
             if (!tbFaceModelService.save(faceModel)) {
-                throw new EmosException("人脸数据库持久化错误");
+                log.error("人脸数据库持久化错误");
+                throw new EmosException("人脸持久化错误");
             }
         }
     }
@@ -268,11 +302,12 @@ public class CheckinServiceImpl implements CheckinService {
     /**
      * 删除人脸模型 数据库，人脸模型服务端
      *
-     * @param userId        用户id
-     * @param userFaceModel 人脸模型数据
+     * @param userId 用户id
      */
     @Override
-    public void deleteFaceModel(int userId, String userFaceModel) {
+    public void deleteFaceModel(int userId) {
+        TbFaceModel user = tbFaceModelService.getOne(new QueryWrapper<TbFaceModel>().eq("user_id", userId));
+        String userFaceModel = user.getFaceModel();
         HttpRequest faceRequest = getFaceRequest(deletFaceModelUrl);
         faceRequest.form("outer_id", outherId);
         faceRequest.form("face_tokens", userFaceModel);
