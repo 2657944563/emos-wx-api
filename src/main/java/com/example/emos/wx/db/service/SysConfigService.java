@@ -1,4 +1,4 @@
-package com.example.emos.wx.db.service.sqlService;
+package com.example.emos.wx.db.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.emos.wx.db.pojo.SysConfig;

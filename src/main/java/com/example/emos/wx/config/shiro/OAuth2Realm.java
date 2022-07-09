@@ -3,7 +3,7 @@ package com.example.emos.wx.config.shiro;
 import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.db.pojo.TbUser;
-import com.example.emos.wx.db.service.contollerService.UserService;
+import com.example.emos.wx.db.service.TbUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
@@ -28,7 +28,7 @@ public class OAuth2Realm extends AuthorizingRealm {
     @Autowired
     JwtUtil jwtUtil;
     @Resource
-    UserService userService;
+    TbUserService userService;
 
     /**
      * 验证传入的令牌对象是否是自定义的token对象

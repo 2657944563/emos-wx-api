@@ -1,11 +1,17 @@
 package com.example.emos.wx.controller;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
+import com.example.emos.wx.config.SystemConstants;
 import com.example.emos.wx.controller.from.CheckinForm;
-import com.example.emos.wx.db.service.contollerService.CheckinService;
+import com.example.emos.wx.db.pojo.TbCheckin;
+import com.example.emos.wx.db.pojo.TbUser;
+import com.example.emos.wx.db.service.TbCheckinService;
+import com.example.emos.wx.db.service.TbUserService;
 import com.example.emos.wx.exception.EmosException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -18,6 +24,8 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 /**
@@ -31,7 +39,11 @@ public class CheckinController {
     @Value("${emos.face.image-folder}")
     private String imageFolder;
     @Resource
-    CheckinService checkinService;
+    TbCheckinService tbCheckinService;
+    @Resource
+    TbUserService tbUserService;
+    @Resource
+    SystemConstants systemConstants;
 
     @Resource
     JwtUtil jwtUtil;
@@ -56,7 +68,7 @@ public class CheckinController {
         String path = imageFolder + "/" + file.getOriginalFilename().toLowerCase();
         try {
             file.transferTo(Paths.get(path));
-            checkinService.createFaceModel(userId, path);
+            tbCheckinService.createFaceModel(userId, path);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
             throw new EmosException("照片解析失败");
@@ -97,7 +109,7 @@ public class CheckinController {
                 param.put("province", checkinForm.getProvince());
                 param.put("path", filePath);
                 //执行人脸签到流程
-                checkinService.chikin(param);
+                tbCheckinService.chikin(param);
             } catch (IOException e) {
                 log.error(e.getMessage(), e);
                 throw new EmosException("照片存取失败");
@@ -113,9 +125,51 @@ public class CheckinController {
     @GetMapping("/validCanCheckIn")
     @ApiOperation("查看是否可签到")
     public R validCanCheckIn(@RequestHeader("token") String token) {
-        System.out.println("validaCanCheckIn方法调用 token : " + token);
-        String s = checkinService.validCanCheckIn(jwtUtil.getUserId(token), DateUtil.now());
+//        System.out.println("validaCanCheckIn方法调用 token : " + token);
+        String s = tbCheckinService.validCanCheckIn(jwtUtil.getUserId(token), DateUtil.now());
         return R.ok(s);
+    }
+
+    @GetMapping("/searchTodayCheckin")
+    @ApiOperation("查询用户当前周签到日期")
+    public R checkinWeek(@RequestHeader("token") String token) {
+        HashMap map = new HashMap();
+        map.put("attendanceTime", systemConstants.getAttendanceTime());
+        map.put("closingTime", systemConstants.getClosingTime());
+//        map.put("date", "2022-07-08");
+        map.put("date", DateUtil.today());
+        map.put("userId", jwtUtil.getUserId(token));
+        HashMap todayCheckin = tbCheckinService.searchTodayCheckin(map);
+//        如果今天没有签到,那么获取上次最近日子的签到信息
+        if (todayCheckin == null || todayCheckin.isEmpty()) {
+            TbCheckin one = tbCheckinService.getOne(new QueryWrapper<TbCheckin>().eq("user_id", map.get("userId")).orderByDesc("create_time"));
+//            用户一次都没有签到
+            if (one == null) {
+                System.out.println("用户一次都没有签到");
+            } else {
+                map.put("date", DateUtil.date(one.getDate()).toDateStr());
+                tbCheckinService.searchTodayCheckin(map);
+                System.out.println("今天没有签到");
+                System.out.println(todayCheckin);
+            }
+        } else {
+            System.out.println(todayCheckin);
+            map.putAll(tbCheckinService.searchTodayCheckin((map)));
+        }
+        map.put("checkinDays", tbCheckinService.searchCheckinDays((Integer) map.get("userId")));
+        DateTime startDate = DateUtil.beginOfWeek(DateUtil.date());
+        DateTime endDate = DateUtil.endOfWeek(DateUtil.date());
+        TbUser user = tbUserService.getOne(new QueryWrapper<TbUser>().select("hiredate").eq("id", map.get("userId")));
+        Date hiredDate = user.getHiredate();
+        if (startDate.isBefore(hiredDate)) {
+            startDate = DateUtil.date(hiredDate);
+        }
+        map.put("startDate", startDate.toDateStr());
+        map.put("endDate", endDate.toDateStr());
+        ArrayList<HashMap> list = tbCheckinService.searchWeekCheckin(map);
+        map.put("weekCheckin", list);
+//        System.out.println(JSONObject.toJSONString(map));
+        return R.ok().put("result", map);
     }
 }
 

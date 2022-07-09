@@ -1,5 +1,7 @@
-package com.example.emos.wx.db.service.contollerService.impl;
+package com.example.emos.wx.db.service.impl;
 
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateRange;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
@@ -10,15 +12,18 @@ import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.emos.wx.config.SystemConstants;
+import com.example.emos.wx.db.mapper.TbCheckinMapper;
 import com.example.emos.wx.db.pojo.*;
-import com.example.emos.wx.db.service.contollerService.CheckinService;
-import com.example.emos.wx.db.service.sqlService.*;
+import com.example.emos.wx.db.service.*;
 import com.example.emos.wx.exception.EmosException;
 import com.example.emos.wx.task.EmailTask;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
@@ -28,21 +33,27 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author 2657944563
+ * @description 针对表【tb_checkin(签到表)】的数据库操作Service实现
+ * @createDate 2022-06-29 16:33:12
  */
 @Service
 @Scope("prototype")
 @Slf4j
-public class CheckinServiceImpl implements CheckinService {
+public class TbCheckinServiceImpl extends ServiceImpl<TbCheckinMapper, TbCheckin>
+        implements TbCheckinService {
     @Resource
     SystemConstants systemConstants;
     @Resource
     TbHolidaysService tbHolidaysService;
     @Resource
+    @Lazy
     TbCheckinService tbCheckinService;
     @Resource
     TbWorkdayService tbWorkdayService;
@@ -51,6 +62,8 @@ public class CheckinServiceImpl implements CheckinService {
     //    人脸数据存储库
     @Resource
     TbFaceModelService tbFaceModelService;
+    @Autowired
+    SystemConstants constants;
 
     //    人脸数据模型创建接口地址
     @Value("${emos.face.createFaceModelUrl}")
@@ -318,6 +331,94 @@ public class CheckinServiceImpl implements CheckinService {
         }
     }
 
+    /**
+     * 返回用户前端签到页面需要展示的相关数据
+     *
+     * @param userId 用户id
+     * @return 返回用户查询数据 name photo deptName address status risk checkinTime date
+     */
+    @Override
+    public HashMap searchTodayCheckin(HashMap map) {
+        TbCheckinMapper baseMapper = (TbCheckinMapper) tbCheckinService.getBaseMapper();
+        return baseMapper.searchTodayCheckin(map);
+    }
+
+    @Override
+    public long searchCheckinDays(Integer userId) {
+        return tbCheckinService.count(new QueryWrapper<TbCheckin>().eq("user_id", userId));
+    }
+
+    /**
+     * 查询本周考勤情况
+     *
+     * @param params 本周开始日期,本周结束日期
+     * @return 返回
+     */
+    @Override
+    public ArrayList<HashMap> searchWeekCheckin(HashMap params) {
+        TbCheckinMapper baseMapper = (TbCheckinMapper) tbCheckinService.getBaseMapper();
+//        查询数据库表中指定开始日期和结束日期间的考勤情况
+        ArrayList<HashMap> checkinList = baseMapper.searchWeekCheckin(params);
+        List<TbHolidays> holidList = tbHolidaysService.list(new QueryWrapper<TbHolidays>().ge("date", params.get("startDate")).le("date", params.get("endDate")));
+        List<TbWorkday> workdayList = tbWorkdayService.list(new QueryWrapper<TbWorkday>().ge("date", params.get("startDate")).le("date", params.get("endDate")));
+//        获取本周开始日期喝结束日期
+        DateTime weekStartDate = DateUtil.parseDate(params.get("startDate").toString());
+        DateTime weekEndDate = DateUtil.parseDate(params.get("endDate").toString());
+        DateRange range = DateUtil.range(weekStartDate, weekEndDate, DateField.DAY_OF_MONTH);
+        ArrayList<HashMap> list = new ArrayList<>();
+//        查询当前周的考勤情况 , 入职后,当前周每一个工作日(包括加班),截至至今天
+        for (DateTime dateTime : range) {
+//            String date = dateTime.toString("yyyy-MM-dd");
+            if (dateTime.compareTo(new Date()) > 0) {
+//                如果不是本周已经度过的日子
+                continue;
+            }
+            String dateString = dateTime.toString("yyyy-MM-dd");
+            String type = "工作日";
+            if (dateTime.isWeekend()) {
+                type = "节假日";
+            }
+            for (TbHolidays holiday : holidList) {
+                if (holiday.getDate().equals(dateTime)) {
+                    type = "节假日";
+                    break;
+                }
+            }
+            for (TbWorkday workday : workdayList) {
+                if (workday.getDate().equals(dateTime)) {
+                    type = "工作日";
+                    break;
+                }
+            }
+//            如果工作日,并且日期小于今天
+            String status = "";
+            if ("工作日".equals(type) && DateUtil.compare(dateTime, DateUtil.date()) <= 0) {
+                status = "缺勤";
+//                判断这个工作日是否在考勤列表,在的话赋予考勤状态,否则默认缺勤
+                for (HashMap map : checkinList) {
+                    if (dateString.equals(map.get("date"))) {
+                        status = (String) map.get("status");
+                        break;
+                    }
+                }
+                DateTime endTime = DateUtil.parseDate(DateUtil.today() + constants.getAttendanceEndTime());
+//              处理考勤当天的例外,如果是考勤当天,那么判断是否没有超过考勤时间,没有的话就不做缺勤处理,过了就做缺勤
+//                今天,并且时间在结束之前,并且标记为缺勤 : 修改未空字符串
+                if (dateTime.toString("yyyy-MM-dd").equals(DateUtil.today()) && DateUtil.date().isBefore(endTime) && "缺勤".equals(status)) {
+                    status = "";
+                }
+            }
+            HashMap map = new HashMap();
+            map.put("date", dateString);
+            map.put("status", status);
+            map.put("type", type);
+            map.put("day", DateUtil.dayOfWeekEnum(dateTime).toChinese("周"));
+            list.add(map);
+
+        }
+        return list;
+    }
+
 
     /**
      * 封装请求方法，请求url，url会自动解析中文
@@ -353,3 +454,7 @@ public class CheckinServiceImpl implements CheckinService {
         return request;
     }
 }
+
+
+
+

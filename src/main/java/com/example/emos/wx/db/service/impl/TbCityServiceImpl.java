@@ -1,9 +1,9 @@
-package com.example.emos.wx.db.service.sqlService.impl;
+package com.example.emos.wx.db.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.emos.wx.db.mapper.TbCityMapper;
 import com.example.emos.wx.db.pojo.TbCity;
-import com.example.emos.wx.db.service.sqlService.TbCityService;
+import com.example.emos.wx.db.service.TbCityService;
 import org.springframework.stereotype.Service;
 
 /**

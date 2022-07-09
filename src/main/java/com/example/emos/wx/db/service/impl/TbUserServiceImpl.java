@@ -1,19 +1,20 @@
-package com.example.emos.wx.db.service.contollerService.impl;
+package com.example.emos.wx.db.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.emos.wx.db.mapper.TbUserMapper;
 import com.example.emos.wx.db.pojo.SysConfig;
 import com.example.emos.wx.db.pojo.TbUser;
-import com.example.emos.wx.db.service.contollerService.UserService;
-import com.example.emos.wx.db.service.sqlService.SysConfigService;
-import com.example.emos.wx.db.service.sqlService.TbUserService;
+import com.example.emos.wx.db.service.SysConfigService;
+import com.example.emos.wx.db.service.TbUserService;
 import com.example.emos.wx.exception.EmosException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -27,11 +28,14 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author 2657944563
+ * @description 针对表【tb_user(用户表)】的数据库操作Service实现
+ * @createDate 2022-06-29 16:33:12
  */
 @Service
 @Slf4j
 @Scope("prototype")
-public class UserServiceImpl implements UserService {
+public class TbUserServiceImpl extends ServiceImpl<TbUserMapper, TbUser>
+        implements TbUserService {
     @Value("${emos.wx.secret}")
     private String secret;
     @Value("${emos.wx.appId}")
@@ -39,6 +43,7 @@ public class UserServiceImpl implements UserService {
     @Value("${emos.wx.rootRegisterCode}")
     private String rootRegisterCode;
     @Resource
+    @Lazy
     TbUserService tbUserService;
     @Resource
     SysConfigService sysConfigService;
@@ -83,7 +88,7 @@ public class UserServiceImpl implements UserService {
                 throw new EmosException("管理员冲突,无法绑定超级管理员账号");
             } else {
                 TbUser admin = new TbUser();
-                admin.setName(name);
+                admin.setNickname(name);
                 admin.setPhoto(imgUrl);
                 admin.setOpenId(openId);
                 admin.setRole("[0]");
@@ -164,3 +169,7 @@ public class UserServiceImpl implements UserService {
         redisTemplate.opsForValue().set(key, value, expire, timeType);
     }
 }
+
+
+
+

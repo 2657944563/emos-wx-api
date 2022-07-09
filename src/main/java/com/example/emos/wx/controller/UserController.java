@@ -5,7 +5,7 @@ import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.controller.from.LoginForm;
 import com.example.emos.wx.controller.from.RegisterFrom;
-import com.example.emos.wx.db.service.contollerService.UserService;
+import com.example.emos.wx.db.service.TbUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.authz.annotation.Logical;
@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 @Api("微信登录")
 public class UserController {
     @Autowired
-    UserService userService;
+    TbUserService userService;
     @Autowired
     JwtUtil jwtUtil;
     @Autowired

@@ -1,15 +1,13 @@
 package com.example.emos.wx;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.config.SystemConstants;
 import com.example.emos.wx.db.mapper.TbUserMapper;
 import com.example.emos.wx.db.pojo.TbRole;
-import com.example.emos.wx.db.service.contollerService.CheckinService;
-import com.example.emos.wx.db.service.contollerService.UserService;
-import com.example.emos.wx.db.service.sqlService.TbRoleService;
-import com.example.emos.wx.db.service.sqlService.TbUserService;
+import com.example.emos.wx.db.service.TbCheckinService;
+import com.example.emos.wx.db.service.TbRoleService;
+import com.example.emos.wx.db.service.TbUserService;
 import com.mongodb.client.MongoClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +18,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.annotation.Resource;
-import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 @SpringBootTest
@@ -95,7 +93,7 @@ class EmosWxApiApplicationTests {
      * 测试权限返回
      */
     @Autowired
-    UserService service;
+    TbUserService service;
 
     @Test
     void testuser() {
@@ -118,7 +116,7 @@ class EmosWxApiApplicationTests {
      * 测试
      */
     @Resource
-    CheckinService checkinService;
+    TbCheckinService checkinService;
 
     @Test
     void checkTest() {
@@ -130,6 +128,28 @@ class EmosWxApiApplicationTests {
     void str() {
         String s1 = new StringBuilder("zhang").append("san").toString();
         System.out.println(s1.intern() == s1);
+
+    }
+
+    @Resource
+    TbCheckinService tbCheckinService;
+
+    @Test
+    void searchWeekCheckinTest() {
+//        HashMap map = new HashMap();
+//        map.put("startDate", DateUtil.parse("2022-07-05"));
+//        map.put("endDate", DateUtil.parse("2022-07-10"));
+//        map.put("userId", 9);
+//        ArrayList<HashMap> list = checkinService.searchWeekCheckin(map);
+//        for (HashMap hashMap : list) {
+//            System.out.println(hashMap.toString());
+//        }
+        HashMap m = new HashMap();
+        m.put("userId", 9);
+        m.put("date", "2022-07-08");
+        final HashMap map1 = tbCheckinService.searchTodayCheckin(m);
+        System.out.println(map1);
+
     }
 
     public static void main(String[] args) {
@@ -161,17 +181,19 @@ class EmosWxApiApplicationTests {
 //        request.form("api_secret", "ZJn4TjjnAL5JGDr4TBfPk05KsEhue2dH");
 //        HttpResponse response = request.execute();
 //        JSONObject jsonObject = JSONObject.parseObject(response.body());
-        JSONObject jsonObject = JSONObject.parseObject("{\"thresholds\":{\"1e-5\":73.975,\"1e-4\":69.101,\"1e-3\":62.327},\"confidence\":97.389,\"faces1\":[{\"face_token\":\"bfd3a2d64530dbc72b9cf7fc0dc60c70\",\"face_rectangle\":{\"top\":956,\"left\":160,\"width\":732,\"height\":732}}],\"request_id\":\"1657205701,c0263e89-25b0-4da4-9b6e-7dcdf6d77224\",\"image_id2\":\"/0hdrVdnbWUIHmHSO4O1IA==\",\"time_used\":841,\"faces2\":[{\"face_token\":\"e83fdf9fad0d5d90c85dccc8ce6d5c91\",\"face_rectangle\":{\"top\":956,\"left\":160,\"width\":732,\"height\":732}}],\"image_id1\":\"/0hdrVdnbWUIHmHSO4O1IA==\"}\n");
-        BigDecimal xs = (BigDecimal) jsonObject.get("confidence"); //相似度
-        System.out.println(jsonObject.getString("confidence"));
+//        JSONObject jsonObject = JSONObject.parseObject("{\"thresholds\":{\"1e-5\":73.975,\"1e-4\":69.101,\"1e-3\":62.327},\"confidence\":97.389,\"faces1\":[{\"face_token\":\"bfd3a2d64530dbc72b9cf7fc0dc60c70\",\"face_rectangle\":{\"top\":956,\"left\":160,\"width\":732,\"height\":732}}],\"request_id\":\"1657205701,c0263e89-25b0-4da4-9b6e-7dcdf6d77224\",\"image_id2\":\"/0hdrVdnbWUIHmHSO4O1IA==\",\"time_used\":841,\"faces2\":[{\"face_token\":\"e83fdf9fad0d5d90c85dccc8ce6d5c91\",\"face_rectangle\":{\"top\":956,\"left\":160,\"width\":732,\"height\":732}}],\"image_id1\":\"/0hdrVdnbWUIHmHSO4O1IA==\"}\n");
+//        BigDecimal xs = (BigDecimal) jsonObject.get("confidence"); //相似度
+//        System.out.println(jsonObject.getString("confidence"));
 //        Float confidence = Float.parseFloat(xs);
-        System.out.println(jsonObject);
-        System.out.println(Float.parseFloat(xs.toString()) > 90);
-
-        System.out.println("-----------------------");
+//        System.out.println(jsonObject);
+//        System.out.println(Float.parseFloat(xs.toString()) > 90);
+//
+//        System.out.println("-----------------------");
 //        System.out.println(response.body());
-        System.out.println(jsonObject.get("time_used"));
-        System.out.println("-----------------------");
+//        System.out.println(jsonObject.get("time_used"));
+//        System.out.println("-----------------------");
+
+
     }
 
 }

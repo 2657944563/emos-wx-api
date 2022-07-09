@@ -3,7 +3,7 @@ package com.example.emos.wx;
 import cn.hutool.core.util.StrUtil;
 import com.example.emos.wx.config.SystemConstants;
 import com.example.emos.wx.db.pojo.SysConfig;
-import com.example.emos.wx.db.service.contollerService.UserService;
+import com.example.emos.wx.db.service.TbUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -25,7 +25,7 @@ public class EmosWxApiApplication {
     @Value("${emos.face.image-folder}")
     private String imageFolder;
     @Resource
-    UserService userService;
+    TbUserService userService;
     @Resource
     SystemConstants systemConstants;
 

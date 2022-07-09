@@ -1,9 +1,9 @@
-package com.example.emos.wx.db.service.sqlService.impl;
+package com.example.emos.wx.db.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.emos.wx.db.mapper.SysConfigMapper;
 import com.example.emos.wx.db.pojo.SysConfig;
-import com.example.emos.wx.db.service.sqlService.SysConfigService;
+import com.example.emos.wx.db.service.SysConfigService;
 import org.springframework.stereotype.Service;
 
 /**

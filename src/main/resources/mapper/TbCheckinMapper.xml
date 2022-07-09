@@ -5,17 +5,17 @@
 <mapper namespace="com.example.emos.wx.db.mapper.TbCheckinMapper">
 
     <resultMap id="BaseResultMap" type="com.example.emos.wx.db.pojo.TbCheckin">
-            <id property="id" column="id" jdbcType="OTHER"/>
-            <result property="userId" column="user_id" jdbcType="OTHER"/>
-            <result property="address" column="address" jdbcType="VARCHAR"/>
-            <result property="country" column="country" jdbcType="VARCHAR"/>
-            <result property="province" column="province" jdbcType="VARCHAR"/>
-            <result property="city" column="city" jdbcType="VARCHAR"/>
-            <result property="district" column="district" jdbcType="VARCHAR"/>
-            <result property="status" column="status" jdbcType="TINYINT"/>
-            <result property="risk" column="risk" jdbcType="INTEGER"/>
-            <result property="date" column="date" jdbcType="DATE"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <id property="id" column="id" jdbcType="OTHER"/>
+        <result property="userId" column="user_id" jdbcType="OTHER"/>
+        <result property="address" column="address" jdbcType="VARCHAR"/>
+        <result property="country" column="country" jdbcType="VARCHAR"/>
+        <result property="province" column="province" jdbcType="VARCHAR"/>
+        <result property="city" column="city" jdbcType="VARCHAR"/>
+        <result property="district" column="district" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="risk" column="risk" jdbcType="INTEGER"/>
+        <result property="date" column="date" jdbcType="DATE"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -24,4 +24,46 @@
         district,status,risk,
         date,create_time
     </sql>
+    <select id="searchTodayCheckin" parameterType="hashmap" resultType="java.util.HashMap">
+        SELECT u.name,
+               u.photo,
+               d.dept_name                         AS deptName,
+               c.address,
+               CASE
+                   WHEN c.`status` = 1 THEN
+                       '正常'
+                   WHEN c.`status` = 2 THEN
+                       '迟到'
+                   END                             AS status,
+               CASE
+                   WHEN c.risk = 1 THEN
+                       '低风险'
+                   WHEN c.risk = 2 THEN
+                       '中风险'
+                   WHEN c.risk = 3 THEN
+                       '高风险'
+                   END                             AS risk,
+               DATE_FORMAT(c.create_time, "%H:%i") AS checkinTime,
+               c.date
+        FROM tb_user u
+                 LEFT JOIN tb_checkin c ON u.id = c.user_id
+                 LEFT JOIN tb_dept d ON u.dept_id = d.id
+        WHERE user_id = #{userId}
+          AND u.STATUS = 1
+          AND c.date = #{date};
+    </select>
+    <select id="searchCheckinDays" parameterType="integer" resultType="java.lang.Long">
+        SELECT COUNT(id) as count
+        FROM tb_checkin
+        WHERE tb_checkin.user_id = #{userId};
+    </select>
+    <select id="searchWeekCheckin" parameterType="hashmap" resultType="java.util.HashMap">
+        SELECT CAST(date as char)         as date,
+               IF(status = 1, "正常", "迟到") as status
+        FROM tb_checkin AS c
+        WHERE user_id = #{userId}
+          AND date BETWEEN #{startDate}
+            AND #{endDate}
+    </select>
+
 </mapper>
