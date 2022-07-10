@@ -73,22 +73,22 @@ public class TbUserServiceImpl extends ServiceImpl<TbUserMapper, TbUser>
      *
      * @param wxRegisterCode 微信注册码
      * @param code           用户临时code
-     * @param name           用户名
+     * @param nickName       用户名
      * @param imgUrl         用户头衔地址
      * @return 返回用户在数据库中的id
      */
     @Override
-    public Integer registerUser(String wxRegisterCode, String code, String name, String imgUrl) {
+    public Integer registerUser(String wxRegisterCode, String code, String nickName, String imgUrl) {
 
         String openId = getOpenId(code);
-        System.out.println("openId:" + openId);
+//        System.out.println("openId:" + openId);
         if (rootRegisterCode.equals(wxRegisterCode)) {
             TbUserMapper baseMapper = (TbUserMapper) tbUserService.getBaseMapper();
             if (baseMapper.haveRootUser()) {
                 throw new EmosException("管理员冲突,无法绑定超级管理员账号");
             } else {
                 TbUser admin = new TbUser();
-                admin.setNickname(name);
+                admin.setNickname(nickName);
                 admin.setPhoto(imgUrl);
                 admin.setOpenId(openId);
                 admin.setRole("[0]");
@@ -106,7 +106,7 @@ public class TbUserServiceImpl extends ServiceImpl<TbUserMapper, TbUser>
             System.out.println(rootRegisterCode);
             System.out.println(wxRegisterCode);
             System.out.println(code);
-            System.out.println(name);
+            System.out.println(nickName);
             System.out.println(imgUrl);
             System.out.println("--------------");
         }

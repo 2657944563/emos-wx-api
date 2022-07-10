@@ -19,7 +19,7 @@ public interface TbCheckinMapper extends BaseMapper<TbCheckin> {
     /**
      * 查询用户信息,用于展示用户界面
      *
-     * @param userId 用户id
+     * @param map 用户id,需要查询的指定日期（yyyy-MM-mm）
      * @return 返回用户查询数据 name photo deptName address status risk checkinTime date
      */
     HashMap searchTodayCheckin(HashMap map);
@@ -33,7 +33,7 @@ public interface TbCheckinMapper extends BaseMapper<TbCheckin> {
     Long searchCheckinDays(Integer userId);
 
     /**
-     * 查询用户指定时间端startTime - endTime 的考勤次数
+     * 查询用户 userId 指定时间端startTime - endTime 的考勤次数
      *
      * @param map startTime:开始时间  endTime:截至时间
      * @return 返回开始(包括)以及直到截至(包括)时间考勤的记录 date status

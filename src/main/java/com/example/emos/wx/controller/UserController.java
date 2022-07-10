@@ -1,10 +1,14 @@
 package com.example.emos.wx.controller;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.controller.from.LoginForm;
 import com.example.emos.wx.controller.from.RegisterFrom;
+import com.example.emos.wx.db.pojo.TbDept;
+import com.example.emos.wx.db.pojo.TbUser;
+import com.example.emos.wx.db.service.TbDeptService;
 import com.example.emos.wx.db.service.TbUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,6 +20,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @Api("微信登录")
 public class UserController {
+    @Autowired
+    TbDeptService deptService;
     @Autowired
     TbUserService userService;
     @Autowired
@@ -88,6 +95,21 @@ public class UserController {
     @RequiresPermissions(value = {"ROOT", "USER:ADD"}, logical = Logical.OR)
     public R addUser(String code, String registerCode) {
         return R.ok("用户添加成功").put("token", "token");
+    }
+
+    @GetMapping("/searchUserSummary")
+    @ApiOperation("查询用户信息")
+    public R searchUserSummary(@RequestHeader("token") String token) {
+        int userId = jwtUtil.getUserId(token);
+        HashMap map = new HashMap();
+        TbUser user_id = userService.getOne(new QueryWrapper<TbUser>().eq("id", userId));
+        if (user_id.getStatus() != 1) {
+            return R.ok("员工离职");
+        }
+        map.put("name", user_id.getName());
+        map.put("deptName", deptService.getOne(new QueryWrapper<TbDept>().eq("id", user_id.getDeptId())).getDeptName());
+        map.put("photo", user_id.getPhoto());
+        return R.ok().put("result", map);
     }
 
     /**

@@ -1,13 +1,19 @@
 package com.example.emos.wx;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.config.SystemConstants;
+import com.example.emos.wx.controller.from.SearchMonthCheckinFrom;
 import com.example.emos.wx.db.mapper.TbUserMapper;
 import com.example.emos.wx.db.pojo.TbRole;
+import com.example.emos.wx.db.pojo.TbUser;
 import com.example.emos.wx.db.service.TbCheckinService;
 import com.example.emos.wx.db.service.TbRoleService;
 import com.example.emos.wx.db.service.TbUserService;
+import com.example.emos.wx.exception.EmosException;
 import com.mongodb.client.MongoClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +24,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -137,18 +144,39 @@ class EmosWxApiApplicationTests {
     @Test
     void searchWeekCheckinTest() {
 //        HashMap map = new HashMap();
-//        map.put("startDate", DateUtil.parse("2022-07-05"));
-//        map.put("endDate", DateUtil.parse("2022-07-10"));
+//        map.put("startDate", DateUtil.parse("2022-06-01"));
+//        map.put("endDate", DateUtil.parse("2022-07-30"));
 //        map.put("userId", 9);
 //        ArrayList<HashMap> list = checkinService.searchWeekCheckin(map);
 //        for (HashMap hashMap : list) {
 //            System.out.println(hashMap.toString());
 //        }
-        HashMap m = new HashMap();
-        m.put("userId", 9);
-        m.put("date", "2022-07-08");
-        final HashMap map1 = tbCheckinService.searchTodayCheckin(m);
-        System.out.println(map1);
+//        HashMap m = new HashMap();
+//        m.put("userId", 9);
+//        m.put("date", "2022-07-08");
+//        final HashMap map1 = tbCheckinService.searchTodayCheckin(m);
+//        System.out.println(map1);
+        SearchMonthCheckinFrom from = new SearchMonthCheckinFrom();
+        from.setMonth(7);
+        from.setYear(2022);
+        TbUser user = tbUserService.getOne(new QueryWrapper<TbUser>().select("hiredate").eq("id", 9));
+        Date hiredate = user.getHiredate();
+        String month = from.getMonth() < 10 ? "0" + from.getMonth() : from.getMonth() + "";
+        StringBuilder stringBuilder = new StringBuilder().append(from.getYear()).append("-").append(month).append("-");
+        System.out.println(stringBuilder);
+        DateTime startDate = DateUtil.parse(stringBuilder.append("01"));
+        if (startDate.before(DateUtil.beginOfMonth(hiredate))) {
+            throw new EmosException("仅能查询入职后的考勤记录");
+        }
+        if (startDate.before(hiredate)) {
+            startDate = DateUtil.date(hiredate);
+        }
+        DateTime endDate = DateUtil.endOfMonth(startDate);
+        HashMap map = new HashMap();
+        map.put("userId", 9);
+        map.put("startDate", startDate);
+        map.put("endDate", endDate);
+        System.out.println(R.ok().put("result", tbCheckinService.searchMonthCheckin(map)));
 
     }
 

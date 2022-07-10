@@ -217,7 +217,7 @@ public class TbCheckinServiceImpl extends ServiceImpl<TbCheckinMapper, TbCheckin
                     log.error("疫情信息获取失败： " + this.getClass().getName());
                     throw new EmosException("疫情信息获取失败");
                 }
-                System.out.println("疫情等级：" + yqLevel);
+//                System.out.println("疫情等级：" + yqLevel);
 //                yqLevel = "高风险";
                 if ("高风险".equals(yqLevel)) {
                     resk = 3;
@@ -289,7 +289,7 @@ public class TbCheckinServiceImpl extends ServiceImpl<TbCheckinMapper, TbCheckin
             JSONArray faces = jsonObject.getJSONArray("faces");
 //            人脸模型数据
             String faceToken = faces.getJSONObject(0).getString("face_token");
-            System.out.println("人脸token：" + faceToken);
+//            System.out.println("人脸token：" + faceToken);
 //            删除人脸模型服务器旧数据
             deleteFaceModel(userId);
 //            人脸模型数据服务端持久化
@@ -334,7 +334,7 @@ public class TbCheckinServiceImpl extends ServiceImpl<TbCheckinMapper, TbCheckin
     /**
      * 返回用户前端签到页面需要展示的相关数据
      *
-     * @param userId 用户id
+     * @param map 用户id,需要查询的指定日期（yyyy-MM-mm）
      * @return 返回用户查询数据 name photo deptName address status risk checkinTime date
      */
     @Override
@@ -351,7 +351,7 @@ public class TbCheckinServiceImpl extends ServiceImpl<TbCheckinMapper, TbCheckin
     /**
      * 查询本周考勤情况
      *
-     * @param params 本周开始日期,本周结束日期
+     * @param params 本周开始日期（startDate）,本周结束日期（endDate） userId
      * @return 返回
      */
     @Override
@@ -417,6 +417,11 @@ public class TbCheckinServiceImpl extends ServiceImpl<TbCheckinMapper, TbCheckin
 
         }
         return list;
+    }
+
+    @Override
+    public ArrayList<HashMap> searchMonthCheckin(HashMap params) {
+        return searchWeekCheckin(params);
     }
 
 

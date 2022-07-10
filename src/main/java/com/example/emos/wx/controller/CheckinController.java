@@ -8,6 +8,7 @@ import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.config.SystemConstants;
 import com.example.emos.wx.controller.from.CheckinForm;
+import com.example.emos.wx.controller.from.SearchMonthCheckinFrom;
 import com.example.emos.wx.db.pojo.TbCheckin;
 import com.example.emos.wx.db.pojo.TbUser;
 import com.example.emos.wx.db.service.TbCheckinService;
@@ -145,15 +146,15 @@ public class CheckinController {
             TbCheckin one = tbCheckinService.getOne(new QueryWrapper<TbCheckin>().eq("user_id", map.get("userId")).orderByDesc("create_time"));
 //            用户一次都没有签到
             if (one == null) {
-                System.out.println("用户一次都没有签到");
+//                System.out.println("用户一次都没有签到");
             } else {
                 map.put("date", DateUtil.date(one.getDate()).toDateStr());
-                tbCheckinService.searchTodayCheckin(map);
-                System.out.println("今天没有签到");
-                System.out.println(todayCheckin);
+                map.putAll(tbCheckinService.searchTodayCheckin(map));
+//                System.out.println("今天没有签到");
+//                System.out.println(todayCheckin);
             }
         } else {
-            System.out.println(todayCheckin);
+//            System.out.println(todayCheckin);
             map.putAll(tbCheckinService.searchTodayCheckin((map)));
         }
         map.put("checkinDays", tbCheckinService.searchCheckinDays((Integer) map.get("userId")));
@@ -171,5 +172,42 @@ public class CheckinController {
 //        System.out.println(JSONObject.toJSONString(map));
         return R.ok().put("result", map);
     }
+
+    @PostMapping("/searchMonthCheckin")
+    @ApiOperation("查询用户指定月的签到日期")
+    public R searchMonthCheckin(@Valid @RequestBody SearchMonthCheckinFrom from, @RequestHeader("token") String token) {
+        Integer userId = jwtUtil.getUserId(token);
+        TbUser user = tbUserService.getOne(new QueryWrapper<TbUser>().select("hiredate").eq("id", userId));
+        Date hiredate = user.getHiredate();
+        String month = from.getMonth() < 10 ? "0" + from.getMonth() : from.getMonth() + "";
+        StringBuilder stringBuilder = new StringBuilder().append(from.getYear()).append("-").append(month).append("-");
+        DateTime startDate = DateUtil.parse(stringBuilder.append("01"));
+        if (startDate.before(DateUtil.beginOfMonth(hiredate))) {
+            throw new EmosException("仅能查询入职后的考勤记录");
+        }
+        if (startDate.before(hiredate)) {
+            startDate = DateUtil.date(hiredate);
+        }
+        DateTime endDate = DateUtil.endOfMonth(startDate);
+        HashMap map = new HashMap();
+        map.put("userId", userId);
+        map.put("startDate", startDate);
+        map.put("endDate", endDate);
+        ArrayList<HashMap> list = tbCheckinService.searchMonthCheckin(map);
+        int sum_1 = 0, sum_2 = 0, sum_3 = 0;
+        for (HashMap hashMap : list) {
+            if ("正常".equals(hashMap.get("status"))) {
+                sum_1++;
+            }
+            if ("迟到".equals(hashMap.get("status"))) {
+                sum_2++;
+            }
+            if ("缺勤".equals(hashMap.get("status"))) {
+                sum_3++;
+            }
+        }
+        return R.ok().put("list", list).put("sum_1", sum_1).put("sum_2", sum_2).put("sum_3", sum_3);
+    }
+
 }
 
