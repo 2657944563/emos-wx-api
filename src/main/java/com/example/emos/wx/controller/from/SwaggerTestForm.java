@@ -10,7 +10,7 @@ import javax.validation.constraints.Pattern;
 
 @ApiModel
 @Data
-public class SwaggerTestFrom {
+public class SwaggerTestForm {
     @ApiModelProperty("名字")
     @NotBlank
     @Pattern(regexp = "^[\\u4e00-\\u9fa5]{2,15}$")

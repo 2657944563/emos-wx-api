@@ -8,7 +8,7 @@ import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.config.SystemConstants;
 import com.example.emos.wx.controller.from.CheckinForm;
-import com.example.emos.wx.controller.from.SearchMonthCheckinFrom;
+import com.example.emos.wx.controller.from.SearchMonthCheckinForm;
 import com.example.emos.wx.db.pojo.TbCheckin;
 import com.example.emos.wx.db.pojo.TbUser;
 import com.example.emos.wx.db.service.TbCheckinService;
@@ -175,7 +175,7 @@ public class CheckinController {
 
     @PostMapping("/searchMonthCheckin")
     @ApiOperation("查询用户指定月的签到日期")
-    public R searchMonthCheckin(@Valid @RequestBody SearchMonthCheckinFrom from, @RequestHeader("token") String token) {
+    public R searchMonthCheckin(@Valid @RequestBody SearchMonthCheckinForm from, @RequestHeader("token") String token) {
         Integer userId = jwtUtil.getUserId(token);
         TbUser user = tbUserService.getOne(new QueryWrapper<TbUser>().select("hiredate").eq("id", userId));
         Date hiredate = user.getHiredate();

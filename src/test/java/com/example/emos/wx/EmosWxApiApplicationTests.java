@@ -6,7 +6,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
 import com.example.emos.wx.config.SystemConstants;
-import com.example.emos.wx.controller.from.SearchMonthCheckinFrom;
+import com.example.emos.wx.controller.from.SearchMonthCheckinForm;
+import com.example.emos.wx.db.mapper.MessageDao;
 import com.example.emos.wx.db.mapper.TbUserMapper;
 import com.example.emos.wx.db.pojo.TbRole;
 import com.example.emos.wx.db.pojo.TbUser;
@@ -156,7 +157,7 @@ class EmosWxApiApplicationTests {
 //        m.put("date", "2022-07-08");
 //        final HashMap map1 = tbCheckinService.searchTodayCheckin(m);
 //        System.out.println(map1);
-        SearchMonthCheckinFrom from = new SearchMonthCheckinFrom();
+        SearchMonthCheckinForm from = new SearchMonthCheckinForm();
         from.setMonth(7);
         from.setYear(2022);
         TbUser user = tbUserService.getOne(new QueryWrapper<TbUser>().select("hiredate").eq("id", 9));
@@ -178,6 +179,14 @@ class EmosWxApiApplicationTests {
         map.put("endDate", endDate);
         System.out.println(R.ok().put("result", tbCheckinService.searchMonthCheckin(map)));
 
+    }
+
+    @Autowired
+    MessageDao messageServiceImpl;
+
+    @Test
+    void mongodbTempTest() {
+        System.out.println(messageServiceImpl.searchMessageById("600bea9ab5bafb311f147506"));
     }
 
     public static void main(String[] args) {
