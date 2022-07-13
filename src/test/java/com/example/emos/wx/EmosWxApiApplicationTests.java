@@ -2,6 +2,7 @@ package com.example.emos.wx;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.emos.wx.common.util.R;
 import com.example.emos.wx.config.JwtUtil;
@@ -9,13 +10,18 @@ import com.example.emos.wx.config.SystemConstants;
 import com.example.emos.wx.controller.from.SearchMonthCheckinForm;
 import com.example.emos.wx.db.mapper.MessageDao;
 import com.example.emos.wx.db.mapper.TbUserMapper;
+import com.example.emos.wx.db.pojo.MessageEntity;
 import com.example.emos.wx.db.pojo.TbRole;
 import com.example.emos.wx.db.pojo.TbUser;
+import com.example.emos.wx.db.service.MessageService;
 import com.example.emos.wx.db.service.TbCheckinService;
 import com.example.emos.wx.db.service.TbRoleService;
 import com.example.emos.wx.db.service.TbUserService;
 import com.example.emos.wx.exception.EmosException;
+import com.example.emos.wx.task.MessageTask;
 import com.mongodb.client.MongoClient;
+import com.rabbitmq.client.*;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,11 +31,13 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.annotation.Resource;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 @SpringBootTest
+@Slf4j
 class EmosWxApiApplicationTests {
 
 
@@ -187,6 +195,52 @@ class EmosWxApiApplicationTests {
     @Test
     void mongodbTempTest() {
         System.out.println(messageServiceImpl.searchMessageById("600bea9ab5bafb311f147506"));
+    }
+
+    @Resource
+    MessageTask messageTask;
+    @Resource
+    ConnectionFactory connectionFactory;
+    @Resource
+    MessageService messageService;
+
+    @Test
+    void rebbitmqTest() {
+        try (Connection connection = connectionFactory.newConnection()) {
+            //   打开连接通道
+            Channel channel = connection.createChannel();
+            for (int i = 0; i < 1; i++) {
+                MessageEntity message = new MessageEntity();
+                message.setSenderId(0);
+                message.setPhoto("https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJ2ibFME7vKuDXrxfpF6yQoCrfulRibMTiac5OTnRuZYPib5b1iaLIUqQrFof5ddiam88znTs4mnVMdqqHw/132");
+                message.setSenderName("测试消息");
+                message.setUuid(IdUtil.simpleUUID());
+                message.setMsg("欢迎您注册称为超级管理员，请及时更新你的员工个人信息");
+                message.setSendTime(new Date());
+                String messageId = messageService.insertMessage(message);
+                //   通道连接队列，不存在就创建 队列名字 持久化 排他(加锁) 自动删除队列
+                channel.queueDeclare("9", true, false, false, null);
+                HashMap map = new HashMap();
+                map.put("messageId", messageId);
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+//            channel.basicAck(1,true);
+//            创建AMQP的请求参数,使用开启消息持久化的参数构建，并且传递userid
+                AMQP.BasicProperties properties = MessageProperties.PERSISTENT_TEXT_PLAIN.builder().headers(map).build();
+//            AMQP.BasicProperties properties = new AMQP.BasicProperties().builder().headers(map).build();
+//            发布消息 指定交换机名 路由规则 消息参数 消息正文
+                channel.basicPublish("", "9", properties, message.getMsg().getBytes(StandardCharsets.UTF_8));
+                log.debug("消息发送成功" + message.getMsg());
+//                messageTask.sendAsync("9", message);
+            }
+        } catch (Exception e) {
+            log.warn("执行异常", e);
+            throw new EmosException("消息发送失败");
+        }
+
     }
 
     public static void main(String[] args) {

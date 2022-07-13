@@ -20,7 +20,7 @@ public class MessageServiceImpl implements MessageService {
     MessageRefDao messageRefDao;
 
     @Override
-    public String insert(MessageRefEntity messageRefEntity) {
+    public String insertRef(MessageRefEntity messageRefEntity) {
         return messageRefDao.insert(messageRefEntity);
     }
 
@@ -50,7 +50,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public String insert(MessageEntity entity) {
+    public String insertMessage(MessageEntity entity) {
         return messageDao.insert(entity);
     }
 

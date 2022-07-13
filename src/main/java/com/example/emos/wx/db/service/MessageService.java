@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public interface MessageService {
-    public String insert(MessageRefEntity messageRefEntity);
+    public String insertRef(MessageRefEntity messageRefEntity);
 
     public long searchUnreadCount(int userId);
 
@@ -19,7 +19,7 @@ public interface MessageService {
 
     public long deleteUserMessageRef(int userId);
 
-    public String insert(MessageEntity entity);
+    public String insertMessage(MessageEntity entity);
 
     public List<HashMap> searchMessageByPage(int userId, long start, int length);
 

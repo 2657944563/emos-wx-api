@@ -9,5 +9,5 @@ import javax.validation.constraints.NotBlank;
 @ApiModel
 public class UpdateUnreadMessageForm {
     @NotBlank
-    private String messageId;
+    private String id;
 }

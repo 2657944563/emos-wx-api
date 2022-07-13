@@ -7,6 +7,7 @@ import com.example.emos.wx.controller.from.SearchMessageByIdForm;
 import com.example.emos.wx.controller.from.SearchMessageByPageForm;
 import com.example.emos.wx.controller.from.UpdateUnreadMessageForm;
 import com.example.emos.wx.db.service.MessageService;
+import com.example.emos.wx.task.MessageTask;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,8 @@ import java.util.List;
 public class MessageController {
     @Resource
     JwtUtil jwtUtil;
+    @Resource
+    MessageTask messageTask;
     @Resource
     MessageService messageService;
 
@@ -53,8 +56,8 @@ public class MessageController {
     @PostMapping("searchMessageById")
     @ApiOperation("查询某一条消息")
     public R searchMessageById(@Valid @RequestBody SearchMessageByIdForm form, @RequestHeader("token") String token) {
-        HashMap map = messageService.searchMessageById(form.getMessageId());
-        return R.ok().put("reslut", map);
+        HashMap map = messageService.searchMessageById(form.getId());
+        return R.ok().put("result", map);
     }
 
     /**
@@ -67,14 +70,30 @@ public class MessageController {
     @PostMapping("updateUnreadMessage")
     @ApiOperation("未读消息更新已读消息")
     public R updateUnreadMessage(@Valid @RequestBody UpdateUnreadMessageForm form, @RequestHeader("token") String token) {
-        long l = messageService.updateUnreadMessage(form.getMessageId());
+        long l = messageService.updateUnreadMessage(form.getId());
         return R.ok().put("result", l > 0 ? true : false);
     }
 
     @PostMapping("deleteMessageRefById")
     @ApiOperation("删除某条消息")
     public R deleteMessageRefById(@Valid @RequestBody DeleteMessageRefByIdForm form, @RequestHeader("token") String token) {
-        long l = messageService.deleteMessageRefById(form.getMessageId());
+        long l = messageService.deleteMessageRefById(form.getId());
         return R.ok().put("result", l > 0 ? true : false);
+    }
+
+    /**
+     * 用户前端主动轮询调用刷新消息，将mq中的新消息提取出来，然后存放进mongodb
+     *
+     * @param token 用户token
+     * @return 返回消息信息，新消息数量，未读消息数量
+     */
+    @GetMapping("/refreshMessage")
+    @ApiOperation("用户主动刷新消息")
+    public R refreshMessage(@RequestHeader("token") String token) {
+        int userId = jwtUtil.getUserId(token);
+        messageTask.receiveAsync(userId + "");
+        long lastCount = messageService.searchLastCount(userId);
+        long unreadCount = messageService.searchUnreadCount(userId);
+        return R.ok().put("lastRows", lastCount).put("unreadRows", unreadCount);
     }
 }

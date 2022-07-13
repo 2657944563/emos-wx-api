@@ -1,5 +1,6 @@
 package com.example.emos.wx.db.service.impl;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
@@ -7,11 +8,13 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.emos.wx.db.mapper.TbUserMapper;
+import com.example.emos.wx.db.pojo.MessageEntity;
 import com.example.emos.wx.db.pojo.SysConfig;
 import com.example.emos.wx.db.pojo.TbUser;
 import com.example.emos.wx.db.service.SysConfigService;
 import com.example.emos.wx.db.service.TbUserService;
 import com.example.emos.wx.exception.EmosException;
+import com.example.emos.wx.task.MessageTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -47,6 +50,8 @@ public class TbUserServiceImpl extends ServiceImpl<TbUserMapper, TbUser>
     TbUserService tbUserService;
     @Resource
     SysConfigService sysConfigService;
+    @Resource
+    MessageTask messageTask;
 
     @Resource
     RedisTemplate redisTemplate;
@@ -96,7 +101,14 @@ public class TbUserServiceImpl extends ServiceImpl<TbUserMapper, TbUser>
                 admin.setCreateTime(new Date());
                 admin.setRoot(1);
                 tbUserService.save(admin);
-                //查看是否返回id
+                //向消息队列推送注册消息
+                MessageEntity message = new MessageEntity();
+                message.setSenderId(0);
+                message.setSenderName("系统消息");
+                message.setUuid(IdUtil.simpleUUID());
+                message.setMsg("欢迎您注册称为超级管理员，请及时更新你的员工个人信息");
+                message.setSendTime(new Date());
+                messageTask.sendAsync(admin.getId() + "", message);
                 return admin.getId();
             }
         } else {
@@ -133,12 +145,15 @@ public class TbUserServiceImpl extends ServiceImpl<TbUserMapper, TbUser>
         return permissions;
     }
 
+
     @Override
     public Integer login(String code) {
         TbUser open_id = tbUserService.getOne(new QueryWrapper<TbUser>().eq("open_id", getOpenId(code)));
         if (open_id == null) {
             throw new EmosException("账户不存在");
         }
+//
+//        System.out.println(messageTask.receiveAsync(Integer.toString(open_id.getId())));
 //        TODO 用户登录消息处理
         return open_id.getId();
     }
